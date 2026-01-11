@@ -23,10 +23,6 @@ on:
         description: 'DEVICE_PATH'
         required: true
         default: 'device/EEBBK/H3000S'
-      DEVICE_TREE_NAME:
-        description: 'DEVICE_TREE_NAME (e.g., twrp_dove_evb4)'
-        required: true
-        default: 'twrp_dove_evb4'
       COMMON_TREE_URL:
         description: 'COMMON_TREE_URL (if no common tree, leave blank)'
         required: false
@@ -61,7 +57,6 @@ jobs:
         echo "Device Tree URL: ${{ github.event.inputs.DEVICE_TREE_URL }}"
         echo "Device Tree Branch: ${{ github.event.inputs.DEVICE_TREE_BRANCH }}"
         echo "Device Path: ${{ github.event.inputs.DEVICE_PATH }}"
-        echo "Device Tree Name: ${{ github.event.inputs.DEVICE_TREE_NAME }}"
         echo "Device Name: ${{ github.event.inputs.DEVICE_NAME }}"
         echo "Makefile Name: ${{ github.event.inputs.MAKEFILE_NAME }}"
         echo "Build Target: ${{ github.event.inputs.BUILD_TARGET }}.img"
@@ -139,17 +134,8 @@ jobs:
 
     - name: Sync Device Dependencies
       run: |
-        # 使用 DEVICE_TREE_NAME 而不是从路径提取
-        DEP_FILE="${{ github.event.inputs.DEVICE_PATH }}/${{ github.event.inputs.DEVICE_TREE_NAME }}.dependencies"
-        echo "Looking for dependencies file at: $DEP_FILE"
-        
-        if [ -f "$DEP_FILE" ]; then
-          echo "Found dependencies file, processing..."
-          bash ${GITHUB_WORKSPACE}/scripts/convert.sh "$DEP_FILE"
-          repo sync -j$(nproc --all)
-        else
-          echo "No .dependencies file found at $DEP_FILE, skipping..."
-        fi
+        bash ${GITHUB_WORKSPACE}/scripts/convert.sh ${{ github.event.inputs.DEVICE_PATH }}/${{ steps.buildtree.outputs.value }}.dependencies
+        repo sync -j$(nproc --all)
       working-directory: ${{ steps.pwd.outputs.workspace-folder }}
       continue-on-error: true
 
